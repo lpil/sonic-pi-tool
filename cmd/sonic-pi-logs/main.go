@@ -10,10 +10,10 @@ import (
 func main() {
 	server := &osc.Server{Addr: "localhost:4558"}
 
-	try(server.Handle("/info", func(msg *osc.Message) {
+	try(server.Handle("/log/info", func(msg *osc.Message) {
 		fmt.Print(log.Info(msg.Arguments))
 	}))
-	try(server.Handle("/multi_message", func(msg *osc.Message) {
+	try(server.Handle("/log/multi_message", func(msg *osc.Message) {
 		fmt.Print(log.MultiMessage(msg.Arguments))
 	}))
 	try(server.Handle("/syntax_error", func(msg *osc.Message) {
