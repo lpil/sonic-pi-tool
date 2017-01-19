@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 )
 
 // msg_type to colour according to Sonic Pi GUI
@@ -13,6 +14,19 @@ import (
 // 5:     fg white      bg dodgerblue
 // 6:     fg white      bg darkorange
 // other: fg green
+
+type colorFunc func(...interface{}) string
+
+var colorFuncs = []colorFunc{
+	color.New(color.FgMagenta).SprintFunc(),
+	color.New(color.FgHiBlue).SprintFunc(),
+	color.New(color.FgYellow).SprintFunc(),
+	color.New(color.FgRed).SprintFunc(),
+	color.New(color.FgWhite, color.BgMagenta).SprintFunc(),
+	color.New(color.FgWhite, color.BgBlue).SprintFunc(),
+	color.New(color.FgWhite, color.BgYellow).SprintFunc(),
+	color.New(color.FgGreen).SprintFunc(),
+}
 
 type multiMessage struct {
 	job_id      int32
@@ -66,5 +80,9 @@ func (mm multiMessage) fmt() string {
 }
 
 func (msg message) fmt() string {
-	return fmt.Sprintf("%s", msg.info) // Insert colour here
+	msg_type := msg.msg_type
+	if msg_type < 0 || msg_type > 6 {
+		return colorFuncs[len(colorFuncs)-1](msg.info)
+	}
+	return colorFuncs[msg_type](msg.info)
 }
