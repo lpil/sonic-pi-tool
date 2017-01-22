@@ -20,6 +20,12 @@ Tool can be installed like so:
 cargo install https://github.com/lpil/sonic-pi-tool/
 ```
 
+To upgrade to a newer version use the `--force` flag.
+
+```sh
+cargo install https://github.com/lpil/sonic-pi-tool/ --force
+```
+
 [rust-install]: https://www.rust-lang.org/en-US/install.html
 
 Other installation methods will (hopefully) come at a later date.
