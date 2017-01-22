@@ -91,8 +91,9 @@ sonic-pi-tool stop
 
 ## Other tools
 
-In addition to `sonic-pi-tool` there are two other programs in this project,
-detailed below. Soon they will be deprecated and replaced by `sonic-pi-tool`.
+In addition to `sonic-pi-tool` this project contains `sonic-pi-pipe` and
+`sonic-pi-logs`. These two programs came first and are written in Go. Once
+`sonic-pi-tool` has feature parity with them they will be deprecated.
 
 Read more about these tools [here][old].
 

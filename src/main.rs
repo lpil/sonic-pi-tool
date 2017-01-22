@@ -34,8 +34,12 @@ fn main() {
     let stop = SubCommand::with_name("stop")
         .about("Stops all currently playing music on the server");
 
+    let logs = SubCommand::with_name("logs")
+        .about("Print log events emitted by the Sonic Pi server");
+
     let matches = cli_app.subcommand(stop)
         .subcommand(check)
+        .subcommand(logs)
         .subcommand(eval)
         .subcommand(eval_stdin)
         .subcommand(eval_file)
@@ -47,6 +51,7 @@ fn main() {
         Some("eval") => do_eval(matches),
         Some("eval-file") => do_eval_file(matches),
         Some("eval-stdin") => lib::eval_stdin(),
+        Some("logs") => lib::logs(),
         _ => panic!("This should be unreachable."),
     }
 }
