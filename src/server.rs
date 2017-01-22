@@ -58,11 +58,10 @@ pub fn follow_logs() -> Result<(), FollowLogError> {
 
     loop {
         match socket.recv_from(&mut buffer) {
-            Ok((size, addr)) => {
-                println!("Received packet with size {} from: {}", size, addr);
+            Ok((size, _addr)) => {
                 let packet = rosc::decoder::decode(&buffer[..size]).unwrap();
                 let log = log_packet::to_log_string(packet);
-                println!("{}", log);
+                print!("{}", log);
             }
             Err(e) => {
                 return Err(FollowLogError::ReceiveFail(format!("{}", e)));
