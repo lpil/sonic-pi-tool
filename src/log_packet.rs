@@ -8,6 +8,7 @@ pub fn to_log_string(packet: OscPacket) -> String {
                 "/log/info" => format_log_info(msg),
                 "/info" => format_log_info(msg),
                 "/error" => format_error(msg),
+                "/syntax_error" => format_syntax_error(msg),
                 _ => None,
             };
             log.unwrap_or("".to_string())
@@ -22,6 +23,10 @@ fn format_log_info(msg: OscMessage) -> Option<String> {
 
 fn format_error(msg: OscMessage) -> Option<String> {
     format_string_arg(msg, 1, |e| format!("Runtime Error: {}\n\n", e))
+}
+
+fn format_syntax_error(msg: OscMessage) -> Option<String> {
+    format_string_arg(msg, 1, |e| format!("Syntax Error: {}\n\n", e))
 }
 
 
@@ -82,6 +87,18 @@ Thread death +--&gt; :live_loop_no_sleep_loop
  Live loop :no_sleep_loop did not sleep!
 
 "#;
+        assert_eq!(expected, to_log_string(msg));
+    }
+
+    #[test]
+    fn syntax_error_test() {
+        let error_txt = "a.rb:1: syntax error, unexpected end-of-input".to_string();
+        let msg = OscPacket::Message(OscMessage {
+            addr: "/syntax_error".to_string(),
+            args: Some(vec![OscType::Int(24), OscType::String(error_txt), OscType::Int(1)]),
+        });
+        let expected = "Syntax Error: a.rb:1: syntax error, unexpected end-of-input\n\n"
+            .to_string();
         assert_eq!(expected, to_log_string(msg));
     }
 }
