@@ -53,6 +53,24 @@ struct Message {
     info: String,
 }
 
+impl Message {
+    pub fn new(msg_type: &OscType, info: &OscType) -> Option<Message> {
+        match (msg_type, info) {
+            (&OscType::Int(i), &OscType::String(ref s)) => {
+                Some(Message {
+                    msg_type: i,
+                    info: s.to_string(),
+                })
+            }
+            _ => None,
+        }
+    }
+
+    pub fn write_str(&self, buffer: &mut String) {
+        buffer.push_str(&self.info);
+    }
+}
+
 #[derive(Debug)]
 struct MultiMessage {
     job_id: i32,
@@ -61,6 +79,7 @@ struct MultiMessage {
     messages: Vec<Message>,
 }
 
+// TODO: Make more concise.
 impl MultiMessage {
     pub fn new(msg: OscMessage) -> Option<MultiMessage> {
         let args = match msg.args {
@@ -83,17 +102,45 @@ impl MultiMessage {
             Some(&OscType::Int(i)) => i,
             _ => return None,
         };
+        let mut messages = Vec::with_capacity(num_msgs as usize);
+        for i in 0..num_msgs {
+            let index = (4 + i * 2) as usize;
+            if let Some(msg) = Message::new(&args[index], &args[index + 1]) {
+                messages.push(msg);
+            }
+        }
         let multi = MultiMessage {
             job_id: job_id,
             thread_name: thread_name.to_string(),
             runtime: runtime.to_string(),
-            messages: vec![],
+            messages: messages,
         };
         Some(multi)
     }
 
     pub fn format(&self) -> String {
-        format!("\n[Run {}, Time {}]", self.job_id, self.runtime)
+        // TODO: Use a buffer with a fmt method instead of pushing to string.
+        // This will remove intemediate allocations and clean this up a little.
+        let mut buffer = String::new();
+        buffer.push_str(&format!("\n[Run {}, Time {}]", self.job_id, self.runtime));
+
+        match self.messages.len() {
+            0 => (),
+            1 => {
+                buffer.push_str(&format!("\n └ "));
+                self.messages[0].write_str(&mut buffer);
+            }
+            n => {
+                for i in 0..(n - 1) {
+                    buffer.push_str(&format!("\n ├ "));
+                    self.messages[i].write_str(&mut buffer);
+                }
+                buffer.push_str(&format!("\n └ "));
+                self.messages[n - 1].write_str(&mut buffer);
+            }
+        }
+        buffer.push_str("\n");
+        buffer
     }
 }
 
@@ -112,38 +159,68 @@ mod tests {
             addr: "/multi_message".to_string(),
             args: Some(vec![job_id, thread_name, runtime, num_msgs]),
         });
-        let expected = "\n[Run 2, Time 1293.1]".to_string();
-        assert_eq!(expected, to_log_string(msg));
+        let expected = "\n[Run 2, Time 1293.1]\n".to_string();
+        let output = to_log_string(msg);
+        println!("expected:{}", expected);
+        println!("actual:{}", output);
+        assert_eq!(expected, output);
     }
 
-    //     #[test]
-    //     fn multi_message_test() {
-    //         let job_id = OscType::Int(2);
-    //         let thread_name = OscType::String("name".to_string());
-    //         let runtime = OscType::String("1293.1".to_string());
-    //         let num_msgs = OscType::Int(2);
-    //         let msg1_type = OscType::Int(0);
-    //         let msg1_info = OscType::String("synth :beep".to_string());
-    //         let msg2_type = OscType::Int(1);
-    //         let msg2_info = OscType::String("synth :boop".to_string());
-    //         let msg = OscPacket::Message(OscMessage {
-    //             addr: "/multi_message".to_string(),
-    //             args: Some(vec![job_id,
-    //                             thread_name,
-    //                             runtime,
-    //                             num_msgs,
-    //                             msg1_type,
-    //                             msg1_info,
-    //                             msg2_type,
-    //                             msg2_info]),
-    //         });
-    //         let expected = r#"\n[Run 2, Time 1293.1]
-    //  ├ synth :beep
-    //  └ synth :boop
-    // "#
-    //             .to_string();
-    //         assert_eq!(expected, to_log_string(msg));
-    //     }
+    #[test]
+    fn multi_message_one_msgs_test() {
+        let job_id = OscType::Int(2);
+        let thread_name = OscType::String("name".to_string());
+        let runtime = OscType::String("1293.1".to_string());
+        let num_msgs = OscType::Int(1);
+        let msg1_type = OscType::Int(0);
+        let msg1_info = OscType::String("synth :beep".to_string());
+        let msg = OscPacket::Message(OscMessage {
+            addr: "/multi_message".to_string(),
+            args: Some(vec![job_id, thread_name, runtime, num_msgs, msg1_type, msg1_info]),
+        });
+        let expected = r#"
+[Run 2, Time 1293.1]
+ └ synth :beep
+"#
+            .to_string();
+        let output = to_log_string(msg);
+        println!("expected:{}", expected);
+        println!("actual:{}", output);
+        assert_eq!(expected, output);
+    }
+
+    #[test]
+    fn multi_message_test() {
+        let job_id = OscType::Int(2);
+        let thread_name = OscType::String("name".to_string());
+        let runtime = OscType::String("1293.1".to_string());
+        let num_msgs = OscType::Int(2);
+        let msg1_type = OscType::Int(0);
+        let msg1_info = OscType::String("synth :beep".to_string());
+        let msg2_type = OscType::Int(1);
+        let msg2_info = OscType::String("synth :boop".to_string());
+        let msg = OscPacket::Message(OscMessage {
+            addr: "/multi_message".to_string(),
+            args: Some(vec![job_id,
+                            thread_name,
+                            runtime,
+                            num_msgs,
+                            msg1_type,
+                            msg1_info,
+                            msg2_type,
+                            msg2_info]),
+        });
+        let expected = r#"
+[Run 2, Time 1293.1]
+ ├ synth :beep
+ └ synth :boop
+"#
+            .to_string();
+        let output = to_log_string(msg);
+        println!("expected:{}", expected);
+        println!("actual:{}", output);
+        assert_eq!(expected, output);
+    }
 
     #[test]
     fn info_test() {
