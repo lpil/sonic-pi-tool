@@ -122,7 +122,7 @@ impl MultiMessage {
         // TODO: Use a buffer with a fmt method instead of pushing to string.
         // This will remove intemediate allocations and clean this up a little.
         let mut buffer = String::new();
-        buffer.push_str(&format!("\n[Run {}, Time {}]", self.job_id, self.runtime));
+        buffer.push_str(&format!("[Run {}, Time {}]", self.job_id, self.runtime));
 
         match self.messages.len() {
             0 => (),
@@ -159,7 +159,7 @@ mod tests {
             addr: "/multi_message".to_string(),
             args: Some(vec![job_id, thread_name, runtime, num_msgs]),
         });
-        let expected = "\n[Run 2, Time 1293.1]\n".to_string();
+        let expected = "[Run 2, Time 1293.1]\n".to_string();
         let output = to_log_string(msg);
         println!("expected:{}", expected);
         println!("actual:{}", output);
@@ -178,8 +178,7 @@ mod tests {
             addr: "/multi_message".to_string(),
             args: Some(vec![job_id, thread_name, runtime, num_msgs, msg1_type, msg1_info]),
         });
-        let expected = r#"
-[Run 2, Time 1293.1]
+        let expected = r#"[Run 2, Time 1293.1]
  └ synth :beep
 "#
             .to_string();
@@ -210,8 +209,7 @@ mod tests {
                             msg2_type,
                             msg2_info]),
         });
-        let expected = r#"
-[Run 2, Time 1293.1]
+        let expected = r#"[Run 2, Time 1293.1]
  ├ synth :beep
  └ synth :boop
 "#
