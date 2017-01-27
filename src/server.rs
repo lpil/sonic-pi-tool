@@ -61,7 +61,7 @@ pub fn follow_logs() -> Result<(), FollowLogError> {
             Ok((size, _addr)) => {
                 let packet = rosc::decoder::decode(&buffer[..size]).unwrap();
                 let log = log_packet::to_log_string(packet);
-                print!("{}", log);
+                println!("{}", log);
             }
             Err(e) => {
                 return Err(FollowLogError::ReceiveFail(format!("{}", e)));

@@ -9,6 +9,7 @@ pub fn to_log_string(packet: OscPacket) -> String {
                 "/info" => format_log_info(msg),
                 "/error" => format_error(msg),
                 "/syntax_error" => format_syntax_error(msg),
+                "/multi_message" => format_multi_message(msg),
                 _ => None,
             };
             log.unwrap_or("".to_string())
@@ -42,11 +43,107 @@ fn format_string_arg<F>(msg: OscMessage, index: usize, fmt: F) -> Option<String>
         })
 }
 
+fn format_multi_message(msg: OscMessage) -> Option<String> {
+    MultiMessage::new(msg).map(|m| m.format())
+}
+
+#[derive(Debug)]
+struct Message {
+    msg_type: i32,
+    info: String,
+}
+
+#[derive(Debug)]
+struct MultiMessage {
+    job_id: i32,
+    thread_name: String,
+    runtime: String,
+    messages: Vec<Message>,
+}
+
+impl MultiMessage {
+    pub fn new(msg: OscMessage) -> Option<MultiMessage> {
+        let args = match msg.args {
+            Some(a) => a,
+            _ => return None,
+        };
+        let job_id = match args.get(0) {
+            Some(&OscType::Int(i)) => i,
+            _ => return None,
+        };
+        let thread_name = match args.get(1) {
+            Some(&OscType::String(ref s)) => s,
+            _ => return None,
+        };
+        let runtime = match args.get(2) {
+            Some(&OscType::String(ref s)) => s,
+            _ => return None,
+        };
+        let num_msgs = match args.get(3) {
+            Some(&OscType::Int(i)) => i,
+            _ => return None,
+        };
+        let multi = MultiMessage {
+            job_id: job_id,
+            thread_name: thread_name.to_string(),
+            runtime: runtime.to_string(),
+            messages: vec![],
+        };
+        Some(multi)
+    }
+
+    pub fn format(&self) -> String {
+        format!("\n[Run {}, Time {}]", self.job_id, self.runtime)
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use rosc::{OscPacket, OscMessage, OscType};
     use super::*;
+
+    #[test]
+    fn multi_message_no_msgs_test() {
+        let job_id = OscType::Int(2);
+        let thread_name = OscType::String("name".to_string());
+        let runtime = OscType::String("1293.1".to_string());
+        let num_msgs = OscType::Int(0);
+        let msg = OscPacket::Message(OscMessage {
+            addr: "/multi_message".to_string(),
+            args: Some(vec![job_id, thread_name, runtime, num_msgs]),
+        });
+        let expected = "\n[Run 2, Time 1293.1]".to_string();
+        assert_eq!(expected, to_log_string(msg));
+    }
+
+    //     #[test]
+    //     fn multi_message_test() {
+    //         let job_id = OscType::Int(2);
+    //         let thread_name = OscType::String("name".to_string());
+    //         let runtime = OscType::String("1293.1".to_string());
+    //         let num_msgs = OscType::Int(2);
+    //         let msg1_type = OscType::Int(0);
+    //         let msg1_info = OscType::String("synth :beep".to_string());
+    //         let msg2_type = OscType::Int(1);
+    //         let msg2_info = OscType::String("synth :boop".to_string());
+    //         let msg = OscPacket::Message(OscMessage {
+    //             addr: "/multi_message".to_string(),
+    //             args: Some(vec![job_id,
+    //                             thread_name,
+    //                             runtime,
+    //                             num_msgs,
+    //                             msg1_type,
+    //                             msg1_info,
+    //                             msg2_type,
+    //                             msg2_info]),
+    //         });
+    //         let expected = r#"\n[Run 2, Time 1293.1]
+    //  ├ synth :beep
+    //  └ synth :boop
+    // "#
+    //             .to_string();
+    //         assert_eq!(expected, to_log_string(msg));
+    //     }
 
     #[test]
     fn info_test() {
