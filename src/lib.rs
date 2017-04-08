@@ -92,10 +92,16 @@ pub fn logs() {
 /// Find the Sonic Pi server executable and run it. If it can be found.
 ///
 pub fn start_server() {
-    let path = "/Applications/Sonic Pi.app/server/bin/sonic-pi-server.rb";
-    if Path::new(path).exists() {
-        execv(&CString::new(path).unwrap(), &[]).expect(&format!("Unable to start {}", path));
-    }
-    println!("I couldn't find the Sonic Pi server executable :(");
-    process::exit(1);
+    let paths = [
+        "/Applications/Sonic Pi.app/server/bin/sonic-pi-server.rb",
+        "./app/server/bin/sonic-pi-server.rb"
+    ];
+
+    match paths.iter().find(|&&p| Path::new(p).exists()) {
+        Some(p) => execv(&CString::new(*p).unwrap(), &[]).expect(&format!("Unable to start {}", *p)),
+        None => {
+            println!("I couldn't find the Sonic Pi server executable :(");
+            process::exit(1);
+        }
+    };
 }
