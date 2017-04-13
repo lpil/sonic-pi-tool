@@ -17,9 +17,9 @@ fn main() {
     let eval = SubCommand::with_name("eval")
         .about("Takes a string of Sonic Pi code and sends it to the server")
         .arg(Arg::with_name("CODE")
-            .help("A string of Sonic Pi code")
-            .required(true)
-            .index(1));
+                 .help("A string of Sonic Pi code")
+                 .required(true)
+                 .index(1));
 
     let eval_stdin = SubCommand::with_name("eval-stdin")
         .about("Reads Sonic Pi code from stdin and sends it to the server");
@@ -27,20 +27,21 @@ fn main() {
     let eval_file = SubCommand::with_name("eval-file")
         .about("Reads Sonic Pi code from a file and sends it to the server")
         .arg(Arg::with_name("PATH")
-            .help("Path to the file of Sonic Pi code")
-            .required(true)
-            .index(1));
+                 .help("Path to the file of Sonic Pi code")
+                 .required(true)
+                 .index(1));
 
-    let start_server = SubCommand::with_name("start-server")
-        .about("Find and start the Sonic Pi server");
+    let start_server =
+        SubCommand::with_name("start-server").about("Find and start the Sonic Pi server");
 
-    let stop = SubCommand::with_name("stop")
-        .about("Stops all currently playing music on the server");
+    let stop =
+        SubCommand::with_name("stop").about("Stops all currently playing music on the server");
 
-    let logs = SubCommand::with_name("logs")
-        .about("Print log events emitted by the Sonic Pi server");
+    let logs =
+        SubCommand::with_name("logs").about("Print log events emitted by the Sonic Pi server");
 
-    let matches = cli_app.subcommand(stop)
+    let matches = cli_app
+        .subcommand(stop)
         .subcommand(check)
         .subcommand(logs)
         .subcommand(eval)
@@ -62,7 +63,8 @@ fn main() {
 }
 
 fn do_eval_file(matches: &clap::ArgMatches) {
-    let path = matches.subcommand_matches("eval-file")
+    let path = matches
+        .subcommand_matches("eval-file")
         .unwrap()
         .value_of("PATH")
         .unwrap()
@@ -71,7 +73,8 @@ fn do_eval_file(matches: &clap::ArgMatches) {
 }
 
 fn do_eval(matches: &clap::ArgMatches) {
-    let code = matches.subcommand_matches("eval")
+    let code = matches
+        .subcommand_matches("eval")
         .unwrap()
         .value_of("CODE")
         .unwrap()

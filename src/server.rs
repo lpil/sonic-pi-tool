@@ -26,9 +26,9 @@ pub fn run_code(source: String) {
     let osc_source = OscType::String(source);
 
     let msg = &OscPacket::Message(OscMessage {
-        addr: "/run-code".to_string(),
-        args: Some(vec![client_name, osc_source]),
-    });
+                                      addr: "/run-code".to_string(),
+                                      args: Some(vec![client_name, osc_source]),
+                                  });
     let msg_buf = encoder::encode(msg).unwrap();
     send(&msg_buf);
 }
@@ -40,9 +40,9 @@ pub fn stop_all_jobs() {
     let client_name = OscType::String("SONIC_PI_TOOL".to_string());
 
     let msg = &OscPacket::Message(OscMessage {
-        addr: "/stop-all-jobs".to_string(),
-        args: Some(vec![client_name]),
-    });
+                                      addr: "/stop-all-jobs".to_string(),
+                                      args: Some(vec![client_name]),
+                                  });
     let msg_buf = encoder::encode(msg).unwrap();
     send(&msg_buf);
 }
