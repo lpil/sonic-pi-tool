@@ -2,16 +2,18 @@ extern crate rosc;
 extern crate nix;
 extern crate ansi_term;
 
-use std::process;
+use std::{env, process};
 use std::path::Path;
 use std::ffi::CString;
+use std::io::{self, Read};
 use nix::unistd::execv;
 
 mod server;
 mod file;
 mod log_packet;
+mod installation;
 
-use std::io::{self, Read};
+use installation::Installation;
 
 /// Read code from STDIN and send to Sonic Pi Server.
 ///
@@ -92,13 +94,26 @@ pub fn logs() {
 /// Find the Sonic Pi server executable and run it. If it can be found.
 ///
 pub fn start_server() {
-    let paths = ["/Applications/Sonic Pi.app/server/bin/sonic-pi-server.rb",
-                 "./app/server/bin/sonic-pi-server.rb",
-                 "/usr/lib/sonic-pi/server/bin/sonic-pi-server.rb"];
+    let paths = vec![Installation::new("/Applications/Sonic Pi.app"),
+                     Installation::new("."),
+                     Installation::new("/usr/lib/sonic-pi")];
 
-    match paths.iter().find(|&&p| Path::new(p).exists()) {
-        Some(p) => {
-            execv(&CString::new(*p).unwrap(), &[]).expect(&format!("Unable to start {}", *p))
+    // Look in ~/Applications
+    match env::home_dir() {
+        Some(path) => {
+            let home = format!("{}/Applications/Sonic Pi.app", path.to_str().unwrap());
+
+            paths.insert(0, Installation::new(home));
+        }
+        None => {}
+    };
+
+    match paths.iter().find(|&&i| i.exists()) {
+        Some(i) => {
+            let ruby = i.ruby_path();
+            let script = i.server_path();
+
+            execv(&CString::new(*ruby).unwrap(), &[script]).expect(&format!("Unable to start {}", *script));
         }
         None => {
             println!("I couldn't find the Sonic Pi server executable :(");
