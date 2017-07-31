@@ -46,6 +46,15 @@ fn main() {
     let logs =
         SubCommand::with_name("logs").about("Print log events emitted by the Sonic Pi server");
 
+    let record = SubCommand::with_name("record")
+        .about("Record the audio output of a Sonic Pi session")
+        .arg(
+            Arg::with_name("PATH")
+                .help("Absolute path to the output file")
+                .required(true)
+                .index(1),
+        );
+
     let matches = cli_app
         .subcommand(stop)
         .subcommand(check)
@@ -54,6 +63,7 @@ fn main() {
         .subcommand(eval_stdin)
         .subcommand(eval_file)
         .subcommand(start_server)
+        .subcommand(record)
         .get_matches();
 
     match matches.subcommand_name() {
@@ -64,6 +74,7 @@ fn main() {
         Some("eval-stdin") => lib::eval_stdin(),
         Some("start-server") => lib::start_server(),
         Some("logs") => lib::logs(),
+        Some("record") => do_record(&matches),
         _ => panic!("This should be unreachable."),
     }
 }
@@ -86,4 +97,14 @@ fn do_eval(matches: &clap::ArgMatches) {
         .unwrap()
         .to_string();
     lib::eval(code);
+}
+
+fn do_record(matches: &clap::ArgMatches) {
+    let path = matches
+        .subcommand_matches("record")
+        .unwrap()
+        .value_of("PATH")
+        .unwrap()
+        .to_string();
+    lib::record(&path);
 }

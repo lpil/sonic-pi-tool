@@ -68,6 +68,37 @@ pub fn follow_logs() -> Result<(), FollowLogError> {
     }
 }
 
+pub fn start_recording() {
+    let client_name = OscType::String("SONIC_PI_TOOL".to_string());
+
+    let msg = &OscPacket::Message(OscMessage {
+        addr: "/start-recording".to_string(),
+        args: Some(vec![client_name]),
+    });
+    let msg_buf = encoder::encode(msg).unwrap();
+    send(&msg_buf);
+}
+
+pub fn stop_and_save_recording(path: String) {
+    let stop = &OscPacket::Message(OscMessage {
+        addr: "/stop-recording".to_string(),
+        args: Some(vec![OscType::String("SONIC_PI_TOOL".to_string())]),
+    });
+    let stop_buf = encoder::encode(stop).unwrap();
+    send(&stop_buf);
+
+    let output_file = OscType::String(path);
+    let save = &OscPacket::Message(OscMessage {
+        addr: "/save-recording".to_string(),
+        args: Some(vec![
+            OscType::String("SONIC_PI_TOOL".to_string()),
+            output_file,
+        ]),
+    });
+    let save_buf = encoder::encode(save).unwrap();
+    send(&save_buf);
+}
+
 /// Send an OSC message to the Sonic Pi server, which is presumed to be
 /// listening on UDP port 4557.
 ///

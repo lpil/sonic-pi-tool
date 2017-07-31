@@ -109,3 +109,17 @@ pub fn start_server() {
         }
     };
 }
+
+/// Record the audio output of a Sonic Pi session to a local file.
+/// Stop and save the recording when the <Enter> key is pressed.
+///
+pub fn record(path: &str) {
+    server::start_recording();
+    let mut input = String::new();
+    match io::stdin().read_line(&mut input) {
+        Ok(_) => {
+            server::stop_and_save_recording(path.to_string());
+        }
+        Err(error) => println!("error: {}", error),
+    }
+}
