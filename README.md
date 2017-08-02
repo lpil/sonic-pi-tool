@@ -130,6 +130,16 @@ sonic-pi-tool start-server
 # ...
 ```
 
+### `record`
+
+Record the audio output of a Sonic Pi session to a local file.
+Stop and save the recording when the <Enter> key is pressed.
+
+```sh
+sonic-pi-tool record /tmp/output.wav
+# Recording started, saving to /tmp/output.wav.
+# Press Enter to stop the recording...
+```
 
 ## Other tools
 

@@ -115,11 +115,16 @@ pub fn start_server() {
 ///
 pub fn record(path: &str) {
     server::start_recording();
+    println!("Recording started, saving to {}", path);
+    println!("Press Enter to stop the recording...");
     let mut input = String::new();
     match io::stdin().read_line(&mut input) {
         Ok(_) => {
             server::stop_and_save_recording(path.to_string());
         }
-        Err(error) => println!("error: {}", error),
+        Err(error) => {
+            println!("error: {}", error);
+            server::stop_and_save_recording(path.to_string());
+        }
     }
 }
