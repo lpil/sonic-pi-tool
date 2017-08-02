@@ -41,6 +41,7 @@ Other installation methods will (hopefully) come at a later date.
 - [stop](#stop)
 - [logs](#logs)
 - [start-server](#start-server)
+- [record](#record)
 
 ### `check`
 
