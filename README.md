@@ -29,7 +29,8 @@ cargo install --git https://github.com/lpil/sonic-pi-tool/ --force
 
 [rust-install]: https://www.rust-lang.org/en-US/install.html
 
-Other installation methods will (hopefully) come at a later date.
+`sonic-pi-tool` may not build on older versions of Rust. Please see [the CI
+configuration](././travis.yml) for which versions are explicitly supported.
 
 
 ## Usage
