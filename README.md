@@ -14,8 +14,8 @@ It's ideal for use with [sonicpi.vim][sonicpi.vim].
 
 ## Installation
 
-If you have the [Rust programming language][rust-install] installed Sonic Pi
-Tool can be installed like so:
+# If you have the [Rust programming language][rust-install] installed
+Sonic Pi Tool can be installed like so:
 
 ```sh
 cargo install --git https://github.com/lpil/sonic-pi-tool/
@@ -31,6 +31,19 @@ cargo install --git https://github.com/lpil/sonic-pi-tool/ --force
 
 `sonic-pi-tool` may not build on older versions of Rust. Please see [the CI
 configuration](././travis.yml) for which versions are explicitly supported.
+
+# If you have homebrew
+Sonic Pi Tool can be installed like so:
+
+```sh
+$ brew tap Cj-bc/sonic-pi-tool
+$ brew install sonic-pi-tool
+# or
+$ brew install Cj-bc/sonic-pi-tool/sonic-pi-tool
+```
+
+Homebrew formula is here: [Cj-bc/homebrew-sonic-pi-tool](https://github.com/Cj-bc/homebrew-sonic-pi-tool)
+
 
 
 ## Usage
