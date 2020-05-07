@@ -1,12 +1,13 @@
 extern crate ansi_term;
 extern crate nix;
 extern crate rosc;
+extern crate dirs;
 
 use nix::unistd::execv;
 use std::ffi::CString;
 use std::io::{self, Read};
 use std::path::Path;
-use std::{env, process};
+use std::{process};
 
 mod file;
 mod log_packet;
@@ -87,6 +88,7 @@ pub fn logs() {
 ///
 pub fn start_server() {
     let mut paths = vec![
+        String::from("/Applications/Sonic Pi.app/Contents/Resources/app/server/ruby/bin/sonic-pi-server.rb"),
         String::from("/Applications/Sonic Pi.app/server/bin/sonic-pi-server.rb"),
         String::from("/Applications/Sonic Pi.app/server/ruby/bin/sonic-pi-server.rb"),
         String::from("./app/server/bin/sonic-pi-server.rb"),
@@ -96,7 +98,7 @@ pub fn start_server() {
         String::from("/usr/lib/sonic-pi/server/ruby/bin/sonic-pi-server.rb"),
     ];
 
-    if let Some(home_directory) = env::home_dir() {
+    if let Some(home_directory) = dirs::home_dir() {
         let suffix = "Applications/Sonic Pi.app//server/bin/sonic-pi-server.rb";
         let home = format!("{}/{}", home_directory.to_str().unwrap(), suffix);
 
