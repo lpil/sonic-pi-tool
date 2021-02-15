@@ -41,7 +41,7 @@ Sonic Pi Tool can be installed like so using the Homebrew package manager for OS
 $ brew tap Cj-bc/sonic-pi-tool
 $ brew install sonic-pi-tool
 # or
-$ brew install Cj-bc/sonic-pi-tool/sonic-pi-tool
+$ brew install Cj-bc/sonic-pi-tool/sonic-pi-tool --HEAD
 ```
 
 Homebrew formula is here: [Cj-bc/homebrew-sonic-pi-tool](https://github.com/Cj-bc/homebrew-sonic-pi-tool)
