@@ -31,7 +31,7 @@ system if you wish.
 [rust-install]: https://www.rust-lang.org/en-US/install.html
 
 `sonic-pi-tool` may not build on older versions of Rust. Please see [the CI
-configuration](././travis.yml) for which versions are explicitly supported.
+configuration](.travis.yml) for which versions are explicitly supported.
 
 ### Homebrew
 
