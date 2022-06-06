@@ -14,6 +14,6 @@ path = "src/main.rs"
 [dependencies]
 rosc = "~0.1"
 clap = "~2.33.3"
-nix = "0.7.0"
+nix = "0.20.2"
 ansi_term = "0.9"
 dirs = "1.0.3"
