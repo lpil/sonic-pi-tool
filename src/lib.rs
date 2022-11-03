@@ -108,7 +108,7 @@ pub fn start_server() {
     match paths.iter().find(|p| Path::new(&p).exists()) {
         Some(p) => {
             let cmd = &CString::new(p.clone()).unwrap();
-            execv(cmd, &[]).unwrap_or_else(|_| panic!("Unable to start {}", *p))
+            execv::<CString>(cmd, &[]).unwrap_or_else(|_| panic!("Unable to start {}", *p))
         }
         None => {
             println!("I couldn't find the Sonic Pi server executable :(");
