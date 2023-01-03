@@ -2,16 +2,20 @@ extern crate ansi_term;
 extern crate nix;
 extern crate rosc;
 extern crate dirs;
+extern crate duct;
+extern crate toml;
 
-use nix::unistd::execv;
-use std::ffi::CString;
+use std::{thread, time};
 use std::io::{self, Read};
 use std::path::Path;
-use std::{process};
+use std::process;
+
+use duct::cmd;
 
 mod file;
 mod log_packet;
 mod server;
+mod config;
 
 /// Read code from STDIN and send to Sonic Pi Server.
 ///
@@ -44,11 +48,12 @@ pub fn eval(code: String) {
 /// so siginify this to the user.
 ///
 pub fn check() {
-    if server::server_port_in_use() {
-        println!("Sonic Pi server listening on port 4557");
+    let cfg = config::SonicPiToolCfg::read_from_path(config::SonicPiToolCfg::get_default_cfg_file_path());
+    if server::server_port_in_use(cfg.sonic_pi_port) {
+        println!("Sonic Pi server listening on port {}", cfg.sonic_pi_port);
         process::exit(0);
     } else {
-        println!("Sonic Pi server NOT listening on port 4557");
+        println!("Sonic Pi server NOT listening on port {}", cfg.sonic_pi_port);
         process::exit(1);
     }
 }
@@ -88,27 +93,73 @@ pub fn logs() {
 ///
 pub fn start_server() {
     let mut paths = vec![
-        String::from("/Applications/Sonic Pi.app/Contents/Resources/app/server/ruby/bin/sonic-pi-server.rb"),
-        String::from("/Applications/Sonic Pi.app/server/bin/sonic-pi-server.rb"),
-        String::from("/Applications/Sonic Pi.app/server/ruby/bin/sonic-pi-server.rb"),
-        String::from("./app/server/bin/sonic-pi-server.rb"),
-        String::from("/opt/sonic-pi/app/server/bin/sonic-pi-server.rb"),
-        String::from("/usr/lib/sonic-pi/server/bin/sonic-pi-server.rb"),
-        String::from("/opt/sonic-pi/app/server/ruby/bin/sonic-pi-server.rb"),
-        String::from("/usr/lib/sonic-pi/server/ruby/bin/sonic-pi-server.rb"),
+        String::from("/Applications/Sonic Pi.app/Contents/Resources/app/server/ruby/bin"),
+        String::from("/Applications/Sonic Pi.app/server/bin"),
+        String::from("/Applications/Sonic Pi.app/server/ruby/bin"),
+        String::from("./app/server/bin"),
+        String::from("/opt/spider/app/server/bin"),
+        String::from("/usr/lib/spider/server/bin"),
+        String::from("/opt/spider/app/server/ruby/bin"),
+        String::from("/usr/lib/spider/server/ruby/bin"),
     ];
 
     if let Some(home_directory) = dirs::home_dir() {
-        let suffix = "Applications/Sonic Pi.app//server/bin/sonic-pi-server.rb";
+        let suffix = "Applications/Sonic Pi.app/server/bin";
         let home = format!("{}/{}", home_directory.to_str().unwrap(), suffix);
 
         paths.insert(0, home);
     };
 
-    match paths.iter().find(|p| Path::new(&p).exists()) {
+    match paths
+        .iter()
+        .find(|p| {
+            Path::new(&p).exists()
+        }) {
         Some(p) => {
-            let cmd = &CString::new(p.clone()).unwrap();
-            execv::<CString>(cmd, &[]).unwrap_or_else(|_| panic!("Unable to start {}", *p))
+            let daemon_exe = format!("{}/daemon.rb", p);
+
+            let mut reader = cmd!(daemon_exe, "--no-scsynth-inputs").reader().unwrap();
+            let mut buff: [u8; 1000] = [0; 1000];
+            let read_bytes = reader.read(&mut buff).unwrap();
+            let output = String::from_utf8_lossy(&buff[0..read_bytes]);
+            println!("Daemon Output: {}", output);
+            let out_values:Vec<&str> = output.split(' ')
+                                    .map(|s| s.trim())
+                                    .collect();
+
+            /* Anatomy of the daemon output
+             *
+             * daemon.rb outputs:
+             * 39097 39099 39098 39100 39101 39102 39104 2070055865
+             * |     |     |                             |
+             * +-----]---> Port on which the Daemon listens. Needed for Keep-Alive messages 
+             *       |     |                             |
+             *       |     |                             |
+             *       |     |                             |
+             *       +--> Gui Port - For the "logs" command 
+             *             |                             |
+             *             |                             |
+             *             +--> Server Port - Send Commands to this port
+             *                                           |
+             *                                           |
+             *                                           +---> Token required to communicate with
+             *                                           the other processes
+             * */
+            let daemon_port = out_values[0].parse::<u16>().unwrap();
+            let gui_port = out_values[1].parse::<u16>().unwrap();
+            let sonic_pi_port = out_values[2].parse::<u16>().unwrap();
+            let token = out_values[7].parse::<i32>().unwrap();
+
+            // Write ~/.sonic-pi/tool/ports.toml
+            std::fs::create_dir_all(&config::SonicPiToolCfg::get_default_cfg_folder()).unwrap();
+            let cur_cfg = &config::SonicPiToolCfg::new(out_values, token, sonic_pi_port, daemon_port, gui_port);
+            std::fs::write(&config::SonicPiToolCfg::get_default_cfg_file_path(),
+                           toml::to_string(cur_cfg).unwrap()).unwrap();
+
+            loop {
+                server::send_keep_live();
+                thread::sleep(time::Duration::from_secs(5));
+            };
         }
         None => {
             println!("I couldn't find the Sonic Pi server executable :(");
