@@ -113,9 +113,6 @@ pub fn send_keep_live() {
         addr: "/daemon/keep-alive".to_string(),
         args: Some(vec![rosc::OscType::Int(cfg.token)]),
     });
-    
-    println!("Ping - Keep Alive");
-
     let msg_buf = encoder::encode(msg).unwrap();
     send(&msg_buf, cfg.daemon_port);
 }

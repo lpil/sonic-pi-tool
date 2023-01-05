@@ -118,41 +118,42 @@ pub fn start_server() {
         Some(p) => {
             let daemon_exe = format!("{}/daemon.rb", p);
 
+            println!("Running: {}...", p);
             let mut reader = cmd!(daemon_exe, "--no-scsynth-inputs").reader().unwrap();
             let mut buff: [u8; 1000] = [0; 1000];
             let read_bytes = reader.read(&mut buff).unwrap();
             let output = String::from_utf8_lossy(&buff[0..read_bytes]);
-            println!("Daemon Output: {}", output);
+            println!("Daemon Running - Output: {}", output);
             let out_values:Vec<&str> = output.split(' ')
                                     .map(|s| s.trim())
                                     .collect();
-
-            /* Anatomy of the daemon output
+            /* Daemon output:
              *
-             * daemon.rb outputs:
+             * daemon.rb outputs 8 ints:
              * 39097 39099 39098 39100 39101 39102 39104 2070055865
              * |     |     |                             |
-             * +-----]---> Port on which the Daemon listens. Needed for Keep-Alive messages 
+             * +-----]---> Port on which the Daemon listens. Needed for Keep-Alive messages.
              *       |     |                             |
              *       |     |                             |
              *       |     |                             |
-             *       +--> Gui Port - For the "logs" command 
+             *       +--> Gui Port - We need it for the "logs" command.
              *             |                             |
              *             |                             |
-             *             +--> Server Port - Send Commands to this port
+             *             +--> Server Port - Send Commands to this port.
              *                                           |
              *                                           |
              *                                           +---> Token required to communicate with
-             *                                           the other processes
+             *                                           the other processes.
              * */
-            let daemon_port = out_values[0].parse::<u16>().unwrap();
-            let gui_port = out_values[1].parse::<u16>().unwrap();
+            let daemon_port   = out_values[0].parse::<u16>().unwrap();
+            let gui_port      = out_values[1].parse::<u16>().unwrap();
             let sonic_pi_port = out_values[2].parse::<u16>().unwrap();
-            let token = out_values[7].parse::<i32>().unwrap();
+            let token         = out_values[7].parse::<i32>().unwrap();
 
-            // Write ~/.sonic-pi/tool/ports.toml
+            // Write the ports of the different processes into a config file so other commands know
+            // how to reach the right endpoints
             std::fs::create_dir_all(&config::SonicPiToolCfg::get_default_cfg_folder()).unwrap();
-            let cur_cfg = &config::SonicPiToolCfg::new(out_values, token, sonic_pi_port, daemon_port, gui_port);
+            let cur_cfg = &config::SonicPiToolCfg::new(token, sonic_pi_port, daemon_port, gui_port);
             std::fs::write(&config::SonicPiToolCfg::get_default_cfg_file_path(),
                            toml::to_string(cur_cfg).unwrap()).unwrap();
 
