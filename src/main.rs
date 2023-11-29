@@ -53,6 +53,17 @@ fn main() {
                 .index(1),
         );
 
+    let sync = SubCommand::with_name("sync")
+        .about("Sync with a running server by passing the port and token")
+        .args( &[ Arg::with_name("SERVER_PORT")
+                    .help("Port at which the Scynth server is listening on") 
+                    .required(true)
+                    .index(1),
+                  Arg::with_name("TOKEN")
+                    .help("")
+                    .required(true)
+                    .index(2)]);
+
     let matches = cli_app
         .subcommand(stop)
         .subcommand(check)
@@ -62,6 +73,7 @@ fn main() {
         .subcommand(eval_file)
         .subcommand(start_server)
         .subcommand(record)
+        .subcommand(sync)
         .get_matches();
 
     match matches.subcommand_name() {
@@ -73,6 +85,7 @@ fn main() {
         Some("start-server") => lib::start_server(),
         Some("logs") => lib::logs(),
         Some("record") => do_record(&matches),
+        Some("sync") => do_sync(&matches),
         _ => panic!("Unrecognised subcommand"), // This _should_ be unreachable
     }
 }
@@ -106,3 +119,23 @@ fn do_record(matches: &clap::ArgMatches) {
         .to_string();
     lib::record(&path);
 }
+
+fn do_sync(matches: &clap::ArgMatches) {
+    let sonic_pi_port = matches
+        .subcommand_matches("sync")
+        .unwrap()
+        .value_of("SERVER_PORT")
+        .unwrap()
+        .parse::<u16>()
+        .unwrap();
+
+    let token = matches
+        .subcommand_matches("sync")
+        .unwrap()
+        .value_of("TOKEN")
+        .unwrap()
+        .parse::<i32>()
+        .unwrap();
+    lib::sync(&sonic_pi_port, &token);
+}
+

@@ -152,10 +152,8 @@ pub fn start_server() {
 
             // Write the ports of the different processes into a config file so other commands know
             // how to reach the right endpoints
-            std::fs::create_dir_all(&config::SonicPiToolCfg::get_default_cfg_folder()).unwrap();
             let cur_cfg = &config::SonicPiToolCfg::new(token, sonic_pi_port, daemon_port, gui_port);
-            std::fs::write(&config::SonicPiToolCfg::get_default_cfg_file_path(),
-                           toml::to_string(cur_cfg).unwrap()).unwrap();
+            write_config_toml(&cur_cfg);
 
             loop {
                 server::send_keep_live();
@@ -186,4 +184,18 @@ pub fn record(path: &str) {
             server::stop_and_save_recording(path.to_string());
         }
     }
+}
+
+/// Sync with a Server that is already running (e.g. the Sonic Pi GUI)
+/// Will write the Config file so that other commands can correctly talk to that server.
+/// Refer to the README for more details on how to get the port and token
+pub fn sync(sonic_pi_port:&u16, token: &i32) {
+    let cur_cfg = &config::SonicPiToolCfg::new(*token, *sonic_pi_port, 0, 0);
+    write_config_toml(&cur_cfg);
+}
+
+fn write_config_toml(cfg: &config::SonicPiToolCfg) {
+    std::fs::create_dir_all(&config::SonicPiToolCfg::get_default_cfg_folder()).unwrap();
+    std::fs::write(&config::SonicPiToolCfg::get_default_cfg_file_path(),
+                           toml::to_string(cfg).unwrap()).unwrap();
 }
