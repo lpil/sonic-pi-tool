@@ -14,6 +14,11 @@ It's ideal for use with [sonicpi.vim][sonicpi.vim].
 
 ## Installation
 
+### Prerequsities
+
+- Sonic Pi >4.0
+- Rust Compiler >1.56 (If installing from source)
+
 ### From source
 
 If you have the [Rust programming language][rust-install] installed 
@@ -49,14 +54,46 @@ Homebrew formula is here: [Cj-bc/homebrew-sonic-pi-tool](https://github.com/Cj-b
 
 ## Usage
 
+- [start-server](#start-server)
 - [check](#check)
 - [eval](#eval)
 - [eval-file](#eval-file)
 - [eval-stdin](#eval-stdin)
 - [stop](#stop)
 - [logs](#logs)
-- [start-server](#start-server)
 - [record](#record)
+- [sync](#sync)
+
+### `start-server`
+
+Attempts start the Sonic Pi server, if the executable can be found.
+
+Not supported on Windows.
+
+```sh
+sonic-pi-tool start-server
+# Sonic Pi server booting...
+# Using protocol: udp
+# Detecting port numbers...
+# ...
+```
+
+`start-server` will write a `config.toml` under `~/.sonic-pi-tool` with the appropriate information required to connect to the sonic pi audio server.
+
+### `sync`
+
+The Sonic Pi server allocates ports dynamically, and also establishes a token to communicate amongst the different processes involved.
+
+```sh
+sonic-pi-tool sync 33926 1839294199
+### Now sonic-pi-tool is sync'd with that server
+
+sonic-pi-tool check
+# => Sonic Pi server listening on port 33926
+```
+
+If you'd like to connect to the Sonic PI GUI please [see here](docs/SYNC-TO-SONIC-PI-GUI.md) for instructions on how to get the port and token.
+
 
 ### `check`
 
@@ -65,8 +102,7 @@ sonic-pi-tool check
 # => Sonic Pi server listening on port 4557
 ```
 
-Used to check if the Sonic Pi server is running. If the server isn't running
-many of the tool's commands (such as `eval`) will not work.
+Used to check if the Sonic Pi server is running on the port specified in the `~/.sonic-pi/tool/config.toml`. If the server isn't running or if the port isn't correctly configured in the toml file many of the tool's commands (such as `eval`) will not work.
 
 This command returns a non-zero exit code if the server is not running.
 
@@ -129,21 +165,6 @@ sonic-pi-tool logs
 #
 # [Run 2, Time 32.8]
 #  └ synth :beep, {note: 39.0, release: 0.1, amp: 0.9727}
-```
-
-
-### `start-server`
-
-Attempts start the Sonic Pi server, if the executable can be found.
-
-Not supported on Windows.
-
-```sh
-sonic-pi-tool start-server
-# Sonic Pi server booting...
-# Using protocol: udp
-# Detecting port numbers...
-# ...
 ```
 
 ### `record`
